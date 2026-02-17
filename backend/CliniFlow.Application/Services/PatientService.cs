@@ -17,94 +17,110 @@ public class PatientService : IPatientService
         _patientRepository = patientRepository;
     }
 
-    public async Task<IEnumerable<PatientDto>> GetAllAsync()
+    public async Task<IEnumerable<PatientListDto>> GetAllAsync()
     {
         var patients = await _patientRepository.GetAllAsync();
-        return patients.Select(MapToDto);
+        return patients.Select(MapToListDto);
     }
 
-    public async Task<PatientDto?> GetByIdAsync(int id)
+    public async Task<PatientDetailDto?> GetByDNIAsync(string dni)
     {
-        var patient = await _patientRepository.GetByIdAsync(id);
-        return patient == null ? null : MapToDto(patient);
+        var patient = await _patientRepository.GetByDNIAsync(dni);
+        return patient == null ? null : MapToDetailDto(patient);
     }
 
-    public async Task<PatientDto> CreateAsync(CreatePatientDto dto)
+    public async Task<PatientDetailDto> CreateAsync(CreatePatientDto dto)
     {
-        // Validar que no exista otro paciente con el mismo DNI
         var existing = await _patientRepository.GetByDNIAsync(dto.DNI);
         if (existing != null)
             throw new InvalidOperationException($"Ya existe un paciente con DNI {dto.DNI}");
 
         var patient = new Patient
         {
+            DNI = dto.DNI.Trim(),
             FirstName = dto.FirstName.Trim(),
             LastName = dto.LastName.Trim(),
-            DNI = dto.DNI.Trim(),
             DateOfBirth = dto.DateOfBirth,
             Gender = dto.Gender,
-            Phone = dto.Phone,
-            Email = dto.Email,
-            Address = dto.Address,
-            HealthInsurance = dto.HealthInsurance,
+            Phone = dto.Phone.Trim(),
+            Email = dto.Email.Trim(),
+            Address = dto.Address.Trim(),
+            HealthInsurance = dto.HealthInsurance.Trim(),
             CreatedAt = DateTime.UtcNow,
             IsActive = true
         };
 
         var created = await _patientRepository.CreateAsync(patient);
-        return MapToDto(created);
+        return MapToDetailDto(created);
     }
 
-    public async Task<PatientDto?> UpdateAsync(int id, UpdatePatientDto dto)
+    public async Task<PatientDetailDto?> UpdateAsync(string dni, UpdatePatientDto dto)
     {
-        var patient = await _patientRepository.GetByIdAsync(id);
+        var patient = await _patientRepository.GetByDNIAsync(dni);
         if (patient == null) return null;
-
-        // Validar que el DNI no pertenezca a otro paciente
-        var existingWithDNI = await _patientRepository.GetByDNIAsync(dto.DNI);
-        if (existingWithDNI != null && existingWithDNI.Id != id)
-            throw new InvalidOperationException($"Ya existe otro paciente con DNI {dto.DNI}");
 
         patient.FirstName = dto.FirstName.Trim();
         patient.LastName = dto.LastName.Trim();
-        patient.DNI = dto.DNI.Trim();
         patient.DateOfBirth = dto.DateOfBirth;
         patient.Gender = dto.Gender;
-        patient.Phone = dto.Phone;
-        patient.Email = dto.Email;
-        patient.Address = dto.Address;
-        patient.HealthInsurance = dto.HealthInsurance;
+        patient.Phone = dto.Phone.Trim();
+        patient.Email = dto.Email.Trim();
+        patient.Address = dto.Address.Trim();
+        patient.HealthInsurance = dto.HealthInsurance.Trim();
+        patient.UpdatedAt = DateTime.UtcNow;
 
         await _patientRepository.UpdateAsync(patient);
-        return MapToDto(patient);
+        return MapToDetailDto(patient);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(string dni)
     {
-        var patient = await _patientRepository.GetByIdAsync(id);
+        var patient = await _patientRepository.GetByDNIAsync(dni);
         if (patient == null) return false;
 
-        await _patientRepository.DeleteAsync(patient);
+        patient.IsActive = false;
+        patient.UpdatedAt = DateTime.UtcNow;
+        await _patientRepository.UpdateAsync(patient);
         return true;
     }
 
-    // Mapeo manual de Entity a DTO
-    private static PatientDto MapToDto(Patient patient)
+    private static int CalculateAge(DateOnly dateOfBirth)
     {
-        return new PatientDto
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var age = today.Year - dateOfBirth.Year;
+        if (dateOfBirth > today.AddYears(-age)) age--;
+        return age;
+    }
+
+    private static PatientListDto MapToListDto(Patient patient)
+    {
+        return new PatientListDto
         {
-            Id = patient.Id,
+            DNI = patient.DNI,
+            FullName = $"{patient.LastName}, {patient.FirstName}",
+            Age = CalculateAge(patient.DateOfBirth),
+            Gender = patient.Gender,
+            Phone = patient.Phone,
+            HealthInsurance = patient.HealthInsurance
+        };
+    }
+
+    private static PatientDetailDto MapToDetailDto(Patient patient)
+    {
+        return new PatientDetailDto
+        {
+            DNI = patient.DNI,
             FirstName = patient.FirstName,
             LastName = patient.LastName,
-            DNI = patient.DNI,
+            FullName = $"{patient.LastName}, {patient.FirstName}",
             DateOfBirth = patient.DateOfBirth,
+            Age = CalculateAge(patient.DateOfBirth),
             Gender = patient.Gender,
             Phone = patient.Phone,
             Email = patient.Email,
             Address = patient.Address,
             HealthInsurance = patient.HealthInsurance,
-            CreatedAt = patient.CreatedAt,
-            IsActive = patient.IsActive
+            CreatedAt = patient.CreatedAt
         };
     }
 }

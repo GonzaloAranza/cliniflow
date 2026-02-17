@@ -16,27 +16,27 @@ public class PatientsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PatientDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<PatientListDto>>> GetAll()
     {
         var patients = await _patientService.GetAllAsync();
         return Ok(patients);
     }
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<PatientDto>> GetById(int id)
+    [HttpGet("{dni}")]
+    public async Task<ActionResult<PatientDetailDto>> GetByDNI(string dni)
     {
-        var patient = await _patientService.GetByIdAsync(id);
+        var patient = await _patientService.GetByDNIAsync(dni);
         if (patient == null) return NotFound(new { message = "Paciente no encontrado" });
         return Ok(patient);
     }
 
     [HttpPost]
-    public async Task<ActionResult<PatientDto>> Create([FromBody] CreatePatientDto dto)
+    public async Task<ActionResult<PatientDetailDto>> Create([FromBody] CreatePatientDto dto)
     {
         try
         {
             var patient = await _patientService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = patient.Id }, patient);
+            return CreatedAtAction(nameof(GetByDNI), new { dni = patient.DNI }, patient);
         }
         catch (InvalidOperationException ex)
         {
@@ -44,12 +44,12 @@ public class PatientsController : ControllerBase
         }
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<PatientDto>> Update(int id, [FromBody] UpdatePatientDto dto)
+    [HttpPut("{dni}")]
+    public async Task<ActionResult<PatientDetailDto>> Update(string dni, [FromBody] UpdatePatientDto dto)
     {
         try
         {
-            var patient = await _patientService.UpdateAsync(id, dto);
+            var patient = await _patientService.UpdateAsync(dni, dto);
             if (patient == null) return NotFound(new { message = "Paciente no encontrado" });
             return Ok(patient);
         }
@@ -59,10 +59,10 @@ public class PatientsController : ControllerBase
         }
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult> Delete(int id)
+    [HttpDelete("{dni}")]
+    public async Task<ActionResult> Delete(string dni)
     {
-        var result = await _patientService.DeleteAsync(id);
+        var result = await _patientService.DeleteAsync(dni);
         if (!result) return NotFound(new { message = "Paciente no encontrado" });
         return NoContent();
     }
