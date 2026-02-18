@@ -3,6 +3,7 @@ using System;
 using CliniFlow.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CliniFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260218161852_OptimizeMedicalRecordTable")]
+    partial class OptimizeMedicalRecordTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,6 +111,12 @@ namespace CliniFlow.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<int?>("PatientId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ProfessionalId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Treatment")
                         .IsRequired()
                         .HasMaxLength(2000)
@@ -120,6 +129,10 @@ namespace CliniFlow.Infrastructure.Migrations
 
                     b.HasIndex("AppointmentId")
                         .IsUnique();
+
+                    b.HasIndex("PatientId");
+
+                    b.HasIndex("ProfessionalId");
 
                     b.ToTable("MedicalRecords", (string)null);
                 });
@@ -326,6 +339,14 @@ namespace CliniFlow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("CliniFlow.Domain.Entities.Patient", null)
+                        .WithMany("MedicalRecords")
+                        .HasForeignKey("PatientId");
+
+                    b.HasOne("CliniFlow.Domain.Entities.Professional", null)
+                        .WithMany("MedicalRecords")
+                        .HasForeignKey("ProfessionalId");
+
                     b.Navigation("Appointment");
                 });
 
@@ -348,11 +369,15 @@ namespace CliniFlow.Infrastructure.Migrations
             modelBuilder.Entity("CliniFlow.Domain.Entities.Patient", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("MedicalRecords");
                 });
 
             modelBuilder.Entity("CliniFlow.Domain.Entities.Professional", b =>
                 {
                     b.Navigation("Appointments");
+
+                    b.Navigation("MedicalRecords");
                 });
 
             modelBuilder.Entity("CliniFlow.Domain.Entities.User", b =>

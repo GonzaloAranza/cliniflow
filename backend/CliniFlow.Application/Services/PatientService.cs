@@ -5,7 +5,6 @@ using System.Text;
 using CliniFlow.Application.DTOs;
 using CliniFlow.Application.Interfaces;
 using CliniFlow.Domain.Entities;
-
 namespace CliniFlow.Application.Services;
 
 public class PatientService : IPatientService

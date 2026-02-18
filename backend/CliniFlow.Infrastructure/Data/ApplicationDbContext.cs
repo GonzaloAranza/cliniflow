@@ -12,10 +12,11 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<User> Users => Set<User>();
-    public DbSet<Professional> Professionals => Set<Professional>();
+  //  public DbSet<Professional> Professionals => Set<Professional>();
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<MedicalRecord> MedicalRecords => Set<MedicalRecord>();
+    public DbSet<Professional> Professionals => Set<Professional>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,7 +42,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
 
-            entity.HasOne(e => e.Professional)
+           entity.HasOne(e => e.Professional)
                 .WithOne(p => p.User)
                 .HasForeignKey<Professional>(p => p.UserId);
         });
@@ -129,33 +130,35 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<MedicalRecord>(entity =>
         {
             entity.ToTable("MedicalRecords");
+
+            // Clave primaria
             entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.RecordCode).IsRequired().HasMaxLength(20);
-            entity.HasIndex(e => e.RecordCode).IsUnique();
+            // Propiedades de texto (Strings)
+            entity.Property(e => e.Diagnosis)
+                .IsRequired()
+                .HasMaxLength(2000);
 
-            entity.Property(e => e.Diagnosis).IsRequired().HasMaxLength(2000);
-            entity.Property(e => e.Treatment).IsRequired().HasMaxLength(2000);
-            entity.Property(e => e.Observations).HasMaxLength(2000);
+            entity.Property(e => e.Treatment)
+                .IsRequired()
+                .HasMaxLength(2000);
 
-            entity.HasIndex(e => e.AppointmentId).IsUnique();
-            entity.HasIndex(e => e.PatientId);
+            entity.Property(e => e.Observations)
+                .HasMaxLength(2000); // Es opcional (nullable) por defecto en la entidad, aquí limitamos el largo.
+
+            // Auditoría (Fechas)
+            entity.Property(e => e.CreatedAt)
+                .IsRequired();
+
+            entity.Property(e => e.UpdatedAt); // Es nullable, EF lo detecta solo, pero no está de más ponerlo.
 
             // Relaciones
+            // Solo configuramos la relación con Appointment.
+            // Al ser 1 a 1, definimos la FK en MedicalRecord.
             entity.HasOne(e => e.Appointment)
                 .WithOne(a => a.MedicalRecord)
                 .HasForeignKey<MedicalRecord>(e => e.AppointmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Patient)
-                .WithMany(p => p.MedicalRecords)
-                .HasForeignKey(e => e.PatientId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Professional)
-                .WithMany(p => p.MedicalRecords)
-                .HasForeignKey(e => e.ProfessionalId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict); // O Cascade, según prefieras si borras el turno.
         });
     }
 }

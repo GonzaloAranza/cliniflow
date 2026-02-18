@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
 using CliniFlow.Application.Interfaces;
 using CliniFlow.Domain.Entities;
 using CliniFlow.Infrastructure.Data;
@@ -44,5 +42,11 @@ public class PatientRepository : IPatientRepository
     {
         _context.Patients.Update(patient);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<Patient?> GetByIdAsync(int id)
+    {
+        return await _context.Patients
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 }

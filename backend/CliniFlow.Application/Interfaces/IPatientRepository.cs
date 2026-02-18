@@ -13,4 +13,5 @@ public interface IPatientRepository
     Task<Patient?> GetByDNIAsync(string dni);
     Task<Patient> CreateAsync(Patient patient);
     Task UpdateAsync(Patient patient);
+    Task<Patient?> GetByIdAsync(int id);
 }
