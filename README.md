@@ -20,6 +20,7 @@ Actualmente, el backend cuenta con la arquitectura base, la capa de persistencia
 - **ORM:** Entity Framework Core
 - **Documentación API:** Swagger / OpenAPI
 - **Arquitectura:** Clean Architecture (Capas: Domain, Application, Infrastructure, API)
+- **JWT**
 
 ## ⚙️ Configuración y Ejecución
 
