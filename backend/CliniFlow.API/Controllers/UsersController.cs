@@ -1,9 +1,11 @@
 ﻿using CliniFlow.Application.DTOs;
 using CliniFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CliniFlow.API.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
